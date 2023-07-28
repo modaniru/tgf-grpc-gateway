@@ -1,0 +1,42 @@
+version: '3.5'
+services:
+  tgf:
+    image: modaniru/tgf:latest
+    environment:
+      - TWITCH_CLIENT_ID=cuztbk21djzld38t29x5eaam1a3o9f
+      - TWITCH_CLIENT_SECRET=y8f14islzf319iviksvdar036k7p8g
+      - PORT=5555
+    restart: unless-stopped
+    networks:
+      - appnet
+  image-service:
+    image: modaniru/tgf-image-generator:latest
+    restart: unless-stopped
+    environment:
+      - TGF_SERVICE_HOST=tgf:5555
+      - PORT=5556
+    depends_on:
+      - tgf
+    networks:
+      - appnet
+  grpc-gateway:
+    image: modaniru/tgf-grpc-gate-way:latest
+    restart: unless-stopped
+    environment:
+      - TGF_HOST=tgf:5555
+      - IMAGE_HOST=tgf:5556
+    ports:
+      - "80:8080"
+    depends_on:
+      - tgf
+      - image-service
+    networks:
+      - appnet
+      - internet
+networks:
+  internet:
+    name: internet
+    driver: bridge
+  appnet:
+    name: appnet
+    driver: bridge
